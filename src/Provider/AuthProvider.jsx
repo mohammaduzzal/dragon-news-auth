@@ -1,16 +1,20 @@
 import { createContext, useEffect, useState } from "react";
-import { createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, updateProfile } from "firebase/auth";
 import app from "../Firebase/Firebase.config";
 
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext()
 const auth = getAuth(app);
 
+// eslint-disable-next-line react/prop-types
 const AuthProvider = ({children}) => {
     const [user, setUser] = useState(null)
-    console.log(user);
+    const [loading, setLoading] = useState(true)
+    console.log(loading,user);
 
     const createNewUser = (email,password) =>{
+        setLoading(true)
         return createUserWithEmailAndPassword(auth,email,password)
     }
 
@@ -18,6 +22,7 @@ const AuthProvider = ({children}) => {
 
       const unSubscribe =   onAuthStateChanged(auth, currentUser =>{
             setUser(currentUser)
+            setLoading(false)
         })
         return ()=>{
             unSubscribe()
@@ -25,11 +30,17 @@ const AuthProvider = ({children}) => {
     },[])
 
     const userLogin = (email,password)=>{
+        setLoading(true)
         return signInWithEmailAndPassword(auth,email,password)
     }
 
     const logOut = () =>{
+        setLoading(true)
       return signOut(auth)
+    }
+
+    const updatedUserProfile = (updatedData) =>{
+        return updateProfile(auth.currentUser, updatedData)
     }
 
     const AuthInfo = {
@@ -37,10 +48,12 @@ const AuthProvider = ({children}) => {
         setUser,
         createNewUser,
         logOut,
-        userLogin
+        userLogin,
+        loading,
+        updatedUserProfile
 
     }
-    
+
     return (
       <AuthContext.Provider value={AuthInfo}>
         {children}
